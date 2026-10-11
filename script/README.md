@@ -16,15 +16,19 @@ Script `send_hello_world.py` gửi một email text đơn giản bằng Gmail AP
 1. Tạo hoặc chọn project tại [Google Cloud Console](https://console.cloud.google.com/projectselector/home/dashboard).
 
 ![image](./images/step1.png)
+
 2. Bật Gmail API tại [Enable Gmail API](https://console.cloud.google.com/flows/enableapi?apiid=gmail.googleapis.com).
 
-![image](./images/step2.png)  
+![image](./images/step2.png)
+
 3. Cấu hình OAuth consent screen tại [Google Auth Platform](https://console.cloud.google.com/auth/overview). Chọn **External** nếu tài khoản không thuộc Google Workspace của bạn, thêm email test ở mục **Audience/Test users**.
 
 ![image](./images/step3.png)
+
 4. Tạo OAuth client tại [Credentials](https://console.cloud.google.com/apis/credentials): chọn **Create Credentials** -> **OAuth client ID** -> **Desktop app**.
 
 ![image](./images/step4.png)
+
 5. Tải JSON về, đổi tên thành `credentials.json`, đặt vào thư mục `script/`.
 
 Tài liệu chính thức:
