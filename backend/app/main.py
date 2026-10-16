@@ -2,99 +2,28 @@ import json
 import logging
 import secrets
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
 from threading import Lock
 
 from fastapi import (
     BackgroundTasks,
-    Depends,
     FastAPI,
     HTTPException,
     status,
     Request,
-    Response,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-import bcrypt
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from fastapi.staticfiles import StaticFiles
+import uvicorn
 
-from .config import Settings, get_settings
-from .db import get_db, init_db
-from .models import AbsentRequest, User
-from .schemas import AbsentRequestCreate, AbsentRequestResponsePublic, PubSubEnvelope
-from .schemas_auth import Token, TokenPayload, UserCreate, UserLogin
-from .services.gmail import send_absent_request
-from .services.gmail_watch import decode_pubsub_data, sync_history, start_watch
+from app.schemas_bak import PubSubEnvelope
+
+from .core.config import Settings, settings
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from googleapiclient.errors import HttpError
+from app.utils.Gmail import gmail
 
-settings = get_settings()
 logger = logging.getLogger(__name__)
-
-# OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
-
-# JWT settings
-SECRET_KEY = get_settings().secret_key or secrets.token_hex(16)  # Change this in production
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-    )
-
-
-def get_password_hash(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
-
-def create_access_token(username: str, is_admin: bool) -> Token:
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = {"sub": username, "is_admin": is_admin, "exp": expire}
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return Token(access_token=encoded_jwt, token_type="bearer")
-
-
-def get_current_user(
-    request: Request,
-    db: Session = Depends(get_db),
-) -> User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    # Get token from cookie
-    token = request.cookies.get("access_token")
-    if not token:
-        raise credentials_exception
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_data = TokenPayload(sub=username, is_admin=payload.get("is_admin", False))
-    except JWTError:
-        raise credentials_exception
-
-    user = db.scalar(select(User).where(User.username == username))
-    if user is None:
-        raise credentials_exception
-    return user
-
-
-def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
-    if not current_user:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
 
 
 def verify_pubsub_oidc_token(req: Request) -> bool:
@@ -124,22 +53,19 @@ def verify_pubsub_oidc_token(req: Request) -> bool:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    init_db()
     # Khởi động Gmail watch
     try:
-        settings = get_settings()
-        if settings.pubsub_oidc_audience:
-            result = start_watch(settings)
-            print(f"Gmail watch started: {result}")
+        result = gmail.watch_email()
+        print(f"Gmail watch started: {result}")
     except Exception as e:
         print(f"Failed to start Gmail watch: {e}")
     yield
 
 
-app = FastAPI(title=settings.app_name, lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, root_path="/api")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin],
+    allow_origins=["*"],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
     allow_credentials=True,
@@ -153,54 +79,6 @@ async def add_request_id(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     return response
-
-
-@app.get("/api/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
-
-
-@app.get("/api/absent-requests", response_model=list[AbsentRequestResponsePublic])
-def list_absent_requests(
-    db: Session = Depends(get_db),
-) -> list[AbsentRequestResponsePublic]:
-    requests = db.scalars(
-        select(AbsentRequest).order_by(AbsentRequest.created_at.desc())
-    )
-    return [AbsentRequestResponsePublic.model_validate(request) for request in requests]
-
-
-@app.post(
-    "/api/absent-requests",
-    response_model=AbsentRequestResponsePublic,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_absent_request(
-    payload: AbsentRequestCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-) -> AbsentRequestResponsePublic:
-    if not settings.manager_email:
-        raise HTTPException(status_code=500, detail="MANAGER_EMAIL is not configured")
-
-    # Generate a random 6-character security code
-    security_code = secrets.token_hex(3).upper()
-
-    request = AbsentRequest(
-        **payload.model_dump(),
-        employee_id=current_user.id,
-        security_code=security_code,
-    )
-    try:
-        db.add(request)
-        db.flush()
-        request.gmail_message_id = send_absent_request(request, settings)
-        db.commit()
-    except RuntimeError as error:
-        db.rollback()
-        raise HTTPException(status_code=503, detail=str(error)) from error
-    db.refresh(request)
-    return AbsentRequestResponsePublic.model_validate(request)
 
 
 _sync_lock = Lock()
@@ -249,64 +127,12 @@ async def gmail_webhook(
         ) from error
 
 
-# @app.post(
-#     "/api/auth/register", response_model=Token, status_code=status.HTTP_201_CREATED
-# )
-def register_user(
-    payload: UserCreate,
-    db: Session = Depends(get_db),
-) -> Token:
-    hashed_password = get_password_hash(payload.password)
-    user = User(
-        username=payload.username,
-        email=payload.email,
-        hashed_password=hashed_password,
-        is_admin=payload.is_admin,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return create_access_token(user.username, user.is_admin)
+from app.api import auth, absentRequests
 
+app.include_router(router=auth.router)
+app.include_router(router=absentRequests.router)
 
-@app.post("/api/auth/login")
-def login_user(
-    payload: UserLogin,
-    response: Response,
-    db: Session = Depends(get_db),
-):
-    user = db.scalar(select(User).where(User.username == payload.username))
-    if not user or not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
+app.mount("/", StaticFiles(directory="../frontend/dist"), name="static")
 
-    token = create_access_token(user.username, user.is_admin)
-
-    # Set JWT token in HttpOnly cookie
-    response.set_cookie(
-        key="access_token",
-        value=token.access_token,
-        httponly=True,
-        secure=False,  # Set to True in production with HTTPS
-        samesite="lax",
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    )
-
-    return {"message": "Login successful", "user": user.username}
-
-
-@app.get("/api/auth/me")
-def get_current_user_info(
-    current_user: User = Depends(get_current_active_user),
-):
-    return {
-        "username": current_user.username,
-        "email": current_user.email,
-        "is_admin": current_user.is_admin,
-    }
-
-
-@app.post("/api/auth/logout")
-def logout_user(response: Response):
-    # Clear the JWT cookie
-    response.delete_cookie("access_token")
-    return {"message": "Logout successful"}
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

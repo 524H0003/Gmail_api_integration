@@ -212,6 +212,7 @@ frontend/dist/
 # Local application state
 backend/gmail-token.json
 backend/credentials.json
+backend/token.json
 secrets/
 backend/*.db
 

@@ -6,10 +6,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import Settings
-from ..models import AbsentRequest, AbsentStatus, GmailSyncState
-from .email import parse_decision
-from .gmail import gmail_service
+from ..core.config import Settings
 
 logger = logging.getLogger(__name__)
 

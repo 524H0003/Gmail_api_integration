@@ -1,14 +1,8 @@
-from datetime import date, datetime
+from datetime import date
 from typing import Literal
 from uuid import UUID
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class AbsentRequestCreate(BaseModel):
@@ -41,15 +35,3 @@ class AbsentRequestResponsePublic(BaseModel):
     end_date: date
     reason: str
     status: Literal["pending", "approved", "rejected"]
-    created_at: datetime
-    decided_at: datetime | None
-
-
-class PubSubMessage(BaseModel):
-    data: str
-    message_id: str | None = None
-
-
-class PubSubEnvelope(BaseModel):
-    message: PubSubMessage
-    subscription: str | None = None

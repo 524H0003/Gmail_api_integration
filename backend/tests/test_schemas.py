@@ -5,7 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas import AbsentRequestCreate
-from app.config import Settings
+from backend.app.core.config import Settings
 from app.models import AbsentRequest, User
 from app.services.email import build_decision_mailto, build_html, parse_decision
 from app.services.gmail import _load_token

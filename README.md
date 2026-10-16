@@ -1,56 +1,44 @@
-# SOA_DEMO
-
-Demo yêu cầu vắng mặt: React + TanStack Form/Zod gửi yêu cầu tới FastAPI, Gmail API gửi email HTML, Gmail Watch + Google Cloud Pub/Sub webhook đọc phản hồi của quản lý và cập nhật SQLite.
-
-## Chạy local
-
-### Backend
-
+# Google Cloud
+## Tạo project
 ```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+# 1. Đặt ID cho project
+export PROJECT_ID="gmail-pubsub-$(date +%s)"
+export WEBHOOK_URL="https://your-domain.com/api/webhook" # Thay URL webhook của bạn ở đây
+
+# 2. Tạo Project mới
+gcloud projects create $PROJECT_ID --name="Gmail PubSub Automation"
+
+# 3. Đặt Project làm mặc định cho gcloud CLI
+gcloud config set project $PROJECT_ID
+
+# 4. Tự động liên kết Billing Account (Bắt buộc để Pub/Sub hoạt động)
+BILLING_ID=$(gcloud billing accounts list --format="value(name)" | head -n 1)
+if [ -n "$BILLING_ID" ]; then
+  echo "Đang liên kết Billing Account: $BILLING_ID"
+  gcloud billing projects link $PROJECT_ID --billing-account=$BILLING_ID
+else
+  echo "CẢNH BÁO: Không tìm thấy Billing Account nào trong tài khoản!"
+fi
+
+# 5. Kích hoạt Gmail API & Pub/Sub API
+gcloud services enable gmail.googleapis.com pubsub.googleapis.com
+sleep 60
+
+# 6. Tạo Pub/Sub Topic
+gcloud pubsub topics create gmail-notifications
+
+# 7. Cấp quyền Publisher cho Gmail Service Account
+gcloud pubsub topics add-iam-policy-binding gmail-notifications \
+  --member="serviceAccount:gmail-api-push@system.gserviceaccount.com" \
+  --role="roles/pubsub.publisher"
+
+# 8. Tạo Push Subscription trỏ trực tiếp đến Webhook URL
+gcloud pubsub subscriptions create gmail-push-sub \
+  --topic=gmail-notifications \
+  --push-endpoint="$WEBHOOK_URL" \
+  --ack-deadline=30
 ```
 
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Tạo `.env` ở root từ `.env.docker.example`. Gmail OAuth cần credential JSON, Gmail API scope `gmail.modify`, Google Cloud Pub/Sub topic `gmail-absent-updates` và push subscription trỏ tới HTTPS public URL `/api/webhooks/gmail?token=PUBSUB_VERIFICATION_TOKEN`. Có thể truyền OAuth JSON qua `GMAIL_CREDENTIALS_JSON_BASE64` thay vì mount file:
-
-```bash
-export GMAIL_CREDENTIALS_JSON_BASE64="$(base64 -w 0 backend/credentials.json)"
-```
-
-OAuth cũng cần token đã cấp quyền vì container không có trình duyệt để đăng nhập trong lúc xử lý request. Chạy backend local một lần để tạo `gmail-token.json`, sau đó truyền token vào env:
-
-```bash
-export GMAIL_TOKEN_JSON_BASE64="$(base64 -w 0 backend/gmail-token.json)"
-```
-
-Hoặc mount `GMAIL_TOKEN_FILE` vào container. Trên VPS, dùng Nginx reverse proxy cấp TLS và chạy `docker compose exec app python start_watch.py` sau khi cấu hình credential. Lệnh này đăng ký watch và lưu `historyId` ban đầu vào SQLite.
-
-Quản lý phản hồi email bằng đúng cú pháp `APPROVE AR-1` hoặc `REJECT AR-1`. Backend xác nhận email đến từ đúng `manager_email`, đọc Gmail History API sau thông báo Pub/Sub, rồi frontend tự polling để hiển thị trạng thái mới. `mailto:` chỉ mở email soạn sẵn; nó không phải callback.
-
-### Build và chạy nhanh bằng Docker
-
-Nếu credential đã nằm trong `backend/credentials.json`, token đã nằm trong
-`backend/gmail-token.json` và cấu hình nằm trong `backend/.env`, có thể chạy:
-
-```bash
-./build-and-run.sh
-```
-
-Script sẽ truyền hai file Google vào `GMAIL_CREDENTIALS_JSON_BASE64` và
-`GMAIL_TOKEN_JSON_BASE64`, sau đó chạy ứng dụng tại `http://localhost:8080`.
-Có thể đổi cổng hoặc tên image/container:
-
-```bash
-HOST_PORT=80 IMAGE_NAME=absent-desk CONTAINER_NAME=absent-desk ./build-and-run.sh
-```
+## Lấy credentials.json
+- Đầu tiên, cấu hình OAuth consent screen tại [Google Auth Platform](https://console.cloud.google.com/auth/overview) và chọn **External**.
+- Tiếp theo, vào trang [web](https://console.cloud.google.com/apis/credentials). Chọn **Create Credentials** -> **OAuth client ID** -> **Desktop app**.
