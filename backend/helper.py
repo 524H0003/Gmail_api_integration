@@ -6,7 +6,9 @@ from app.db.session import get_db_session
 def create_user(username: str, email: str, password: str, name: str) -> None:
     hashed_password = auth.hash_password(password)
 
-    user_repo = UserRepository(get_db_session())
+    # Get the actual session from the generator
+    session = next(get_db_session())
+    user_repo = UserRepository(session)
 
     user_repo.create(username, name, email, hashed_password)
 

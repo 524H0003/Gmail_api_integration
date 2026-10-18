@@ -17,13 +17,18 @@
 	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [
-		5173
+		8080
 	],
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"johnny-zhao.oai-compatible-copilot",
-				"esbenp.prettier-vscode"
+				"esbenp.prettier-vscode",
+				"ms-python.vscode-python-envs",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-python.debugpy",
+				"ms-python.black-formatter"
 			]
 		}
 	},

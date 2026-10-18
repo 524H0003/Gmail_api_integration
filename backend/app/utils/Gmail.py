@@ -1,11 +1,13 @@
 import base64
-from typing import List, Optional, Dict, Any
+from email.message import EmailMessage
+from typing import List, Dict, Any
 from urllib.parse import quote
 from googleapiclient.errors import HttpError
 
 from app.utils.Google import google
 from app.core.config import settings
 from app.schemas.Google import EmailWatchResponse
+from app.schemas.Email import EmailSchema
 
 
 class Gmail:
@@ -64,44 +66,37 @@ class Gmail:
         subject: str,
         body: str,
     ) -> str:
-        message = f"From: me\r\n"
-        message += f"To: {to}\r\n"
+        message = EmailMessage()
+        message["To"] = to
+        message["From"] = "me"
+        message["Subject"] = subject
+        message.add_alternative(body, subtype="html")
 
-        message += f"Subject: {subject}\r\n"
+        return base64.urlsafe_b64encode(message.as_bytes()).decode("ascii")
 
-        message += "\r\n"
-        message += body
-
-        return base64.urlsafe_b64encode(message.encode("utf-8")).decode("utf-8")
-
-    def receive_email(
-        self,
-        max_results: int = 10,
-        query: Optional[str] = None,
-        label_ids: Optional[List[str]] = None,
-    ) -> List[Dict[str, Any]]:
-        """
-        Receive emails from Gmail inbox.
-
-        Args:
-            max_results: Maximum number of emails to retrieve
-            query: Gmail search query (e.g., 'is:unread', 'from:sender@example.com')
-            label_ids: List of label IDs to filter by
-
-        Returns:
-            List of email dictionaries with message details
-        """
+    def receive_emails(self, start_history_id: str) -> List[EmailSchema]:
         service = self._get_service()
 
         try:
-            results = (
+            history_response = (
                 service.users()
-                .messages()
-                .list(userId="me", maxResults=max_results, q=query, labelIds=label_ids)
+                .history()
+                .list(
+                    userId="me",
+                    startHistoryId=start_history_id,
+                    historyTypes=["messageAdded"],
+                )
                 .execute()
             )
 
-            messages = results.get("messages", [])
+            histories = history_response.get("history", [])
+
+            messages = []
+            for history in histories:
+                messages_added = history.get("messageAdded", [])
+                for message_item in messages_added:
+                    messages.append(message_item["message"])
+
             emails = []
 
             for msg in messages:
@@ -114,7 +109,7 @@ class Gmail:
             print(f"Error receiving emails: {error}")
             return []
 
-    def _get_email_details(self, message_id: str) -> Optional[Dict[str, Any]]:
+    def _get_email_details(self, message_id: str) -> EmailSchema:
         """
         Get detailed information about a specific email.
 
@@ -137,21 +132,16 @@ class Gmail:
             headers = message["payload"]["headers"]
             subject = next((h["value"] for h in headers if h["name"] == "Subject"), "")
             from_email = next((h["value"] for h in headers if h["name"] == "From"), "")
-            date = next((h["value"] for h in headers if h["name"] == "Date"), "")
 
             # Extract email body
             body = self._get_email_body(message["payload"])
 
-            return {
-                "message_id": message_id,
-                "thread_id": message.get("threadId"),
-                "subject": subject,
-                "from": from_email,
-                "date": date,
-                "body": body,
-                "labels": message.get("labelIds", []),
-                "history_id": message.get("historyId"),
-            }
+            return EmailSchema(
+                message_id=message_id,
+                subject=subject,
+                from_email=from_email,
+                body=body,
+            )
         except HttpError as error:
             print(f"Error getting email details: {error}")
             return None
@@ -255,7 +245,7 @@ class Gmail:
         except HttpError as error:
             return {"success": False, "error": str(error)}
 
-    def build_mailto(to: str, subject: str, body: str) -> str:
+    def build_mailto(self, to: str, subject: str, body: str) -> str:
         return f"mailto:{to}?" f"subject={quote(subject)}&body={quote(body)}"
 
 

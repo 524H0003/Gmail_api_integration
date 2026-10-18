@@ -20,13 +20,11 @@ class Auth:
     def jwt_encode(self, input: object):
         return jwt.encode(input, self.jwt_secret_key, algorithm="HS256")
 
-    def jwt_decode(self, token: str):
+    def jwt_decode(self, token: str) -> dict[str, any]:
         try:
-            return jwt.decode(token, self.jwt_secret_key, algorithms=["HS256"]).get(
-                "sub"
-            )
+            return jwt.decode(token, self.jwt_secret_key, algorithms=["HS256"])
         except:
-            return ""
+            return {}
 
 
 auth = Auth()

@@ -32,7 +32,7 @@ def login(
 
     cookie = Cookie(request, response)
 
-    cookie.set_access_token(auth.jwt_encode({"userId": user.id}))
+    cookie.set_access_token(auth.jwt_encode({"userId": str(user.id)}))
 
 
 @router.get("/me", response_model=UserInfo)
@@ -41,7 +41,7 @@ def current_user(
 ):
     cookie = Cookie(request, response)
 
-    userId = auth.jwt_decode(cookie.get_access_token())["userId"]
+    userId = auth.jwt_decode(cookie.get_access_token()).get("userId", "")
 
     if not userId:
         raise HTTPException(
@@ -57,7 +57,7 @@ def current_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="Username not found"
         )
 
-    return UserInfo(**user)
+    return UserInfo.model_validate(user)
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)

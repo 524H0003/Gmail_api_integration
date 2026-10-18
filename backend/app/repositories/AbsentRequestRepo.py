@@ -6,7 +6,7 @@ from string import Template
 from typing import List, Optional
 import uuid
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.AbsentRequest import AbsentRequest
@@ -14,6 +14,7 @@ from app.types import AbsentStatus
 from app.utils.Gmail import gmail
 from app.core.config import settings
 from app.schemas.User import UserInfo
+from app.schemas.Email import EmailSchema
 
 
 class AbsentRequestRepo:
@@ -48,13 +49,13 @@ class AbsentRequestRepo:
 
         approve_mailto = html.escape(
             gmail.build_mailto(
-                self.sender_email, request.id, f"APPROVE {request.security_code}"
+                self.sender_email, str(request.id), f"APPROVE {request.security_code}"
             ),
             quote=True,
         )
         reject_mailto = html.escape(
             gmail.build_mailto(
-                self.sender_email, request.id, f"REJECT {request.security_code}"
+                self.sender_email, str(request.id), f"REJECT {request.security_code}"
             ),
             quote=True,
         )
@@ -103,7 +104,7 @@ class AbsentRequestRepo:
         gmail.send_email(
             self.manager_email,
             f"Absent request from {employee.name}",
-            self._build_mail(employee, new_request)
+            self._build_mail(employee, new_request),
         )
 
         return new_request
@@ -127,43 +128,4 @@ class AbsentRequestRepo:
 
         return self.db_session.execute(query).scalars().all()
 
-    def update_absent_request_status(
-        self,
-        request_id: uuid.UUID,
-        new_status: AbsentStatus,
-        decision_message_id: Optional[str] = None,
-    ) -> Optional[AbsentRequest]:
-        stmt = (
-            update(AbsentRequest)
-            .where(AbsentRequest.id == request_id)
-            .values(status=new_status.value, decision_message_id=decision_message_id)
-            .returning(AbsentRequest)
-        )
-
-        result = self.db_session.execute(stmt)
-        updated_request = result.scalar_one_or_none()
-
-        if updated_request:
-            self.db_session.commit()
-            self.db_session.refresh(updated_request)
-
-        return updated_request
-
-    def update_gmail_message_id(
-        self, request_id: uuid.UUID, gmail_message_id: str
-    ) -> Optional[AbsentRequest]:
-        stmt = (
-            update(AbsentRequest)
-            .where(AbsentRequest.id == request_id)
-            .values(gmail_message_id=gmail_message_id)
-            .returning(AbsentRequest)
-        )
-
-        result = self.db_session.execute(stmt)
-        updated_request = result.scalar_one_or_none()
-
-        if updated_request:
-            self.db_session.commit()
-            self.db_session.refresh(updated_request)
-
-        return updated_request
+    

@@ -12,7 +12,7 @@ router = APIRouter(prefix="/absent-requests")
 
 
 @router.post(
-    "/",
+    "",
     response_model=AbsentRequestResponsePublic,
     status_code=status.HTTP_201_CREATED,
 )
@@ -31,7 +31,7 @@ def create_absent_request(
     return AbsentRequestResponsePublic.model_validate(request)
 
 
-@router.get("/", response_model=list[AbsentRequestResponsePublic])
+@router.get("", response_model=list[AbsentRequestResponsePublic])
 def list_absent_requests(
     db_session: Session = Depends(get_db_session),
     current_user: UserInfo = Depends(current_user),
