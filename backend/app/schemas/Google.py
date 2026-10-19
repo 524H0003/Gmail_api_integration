@@ -28,5 +28,5 @@ class EmailWatchResponse(BaseModel):
 
     success: bool
     error: Optional[str] = None
-    historyId: str
-    expiration: str
+    historyId: Optional[str] = None
+    expiration: Optional[str] = None
