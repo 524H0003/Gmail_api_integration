@@ -1,5 +1,8 @@
 import argparse
 from pathlib import Path
+
+from tabulate import tabulate
+from backend.app.schemas.Email import EmailSchema
 from backend.app.utils.Gmail import gmail
 from backend.app.core.config import settings
 
@@ -20,13 +23,6 @@ def send_email(
         raise Exception(response["error"])
 
 
-def receive_emails(
-    start_history_id: str,
-) -> list:
-    emails = gmail.receive_emails(start_history_id)
-    return emails
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Gmail API tool")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -41,9 +37,18 @@ def parse_args() -> argparse.Namespace:
 
     # Receive emails command
     receive_parser = subparsers.add_parser("receive", help="Receive emails")
-    receive_parser.add_argument("start_history_id", help="Start history ID")
+    receive_parser.add_argument(
+        "--limit", type=int, default=10, help="Number of emails to display"
+    )
 
     return parser.parse_args()
+
+
+def display_email_details(email: EmailSchema) -> None:
+    print(f"\nFrom: {email.from_email}")
+    print(f"Subject: {email.subject}")
+    print(f"Date: {email.date}")
+    print(f"\n{email.body}")
 
 
 def main() -> None:
@@ -62,8 +67,33 @@ def main() -> None:
         )
         print(f"Email sent successfully. Gmail message id: {message_id}")
     elif args.command == "receive":
-        emails = receive_emails(args.start_history_id)
-        print(f"Received {len(emails)} emails")
+        emails = gmail.receive_emails(limit=args.limit)
+        if not emails:
+            print("No new emails found.")
+        else:
+            table_data = []
+            for i, email in enumerate(emails):
+                table_data.append([i + 1, email.from_email, email.subject, email.date])
+
+            headers = ["No", "From", "Subject", "Date"]
+
+            while True:
+                try:
+                    choice = int(
+                        input(
+                            "\nEnter email number to view details (0 to exit; -1 to show emails): "
+                        )
+                    )
+                    if choice == 0:
+                        break
+                    elif choice == -1:
+                        print(tabulate(table_data, headers=headers, tablefmt="grid"))
+                    elif 1 <= choice <= len(emails):
+                        display_email_details(emails[choice - 1])
+                    else:
+                        print("Invalid email number. Please try again.")
+                except ValueError:
+                    print("Please enter a valid number.")
 
 
 if __name__ == "__main__":

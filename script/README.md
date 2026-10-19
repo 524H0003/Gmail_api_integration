@@ -28,7 +28,7 @@ Script `send&recieve.py` gửi một email text đơn giản bằng Gmail API v�
 
 ![image](./images/step4.png)
 
-5. Tải JSON về, đổi tên thành `credentials.json`, đặt vào thư mục `script/`.
+5. Tải JSON về, đổi tên thành `credentials.json`, đặt vào thư mục.
 
 Tài liệu chính thức:
 
@@ -46,8 +46,6 @@ source .venv/bin/activate # Linux
 .venv/Scripts/Activate.ps1 # Windows
 python -m pip install -r requirements.txt
 ```
-
-Sau khi kích hoạt môi trường ảo, chạy script từ thư mục `script`:
 
 ## 3. Gửi email
 

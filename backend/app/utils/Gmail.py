@@ -1,6 +1,6 @@
 import base64
 from email.message import EmailMessage
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from urllib.parse import quote
 from googleapiclient.errors import HttpError
 
@@ -8,6 +8,7 @@ from backend.app.utils.Google import google
 from backend.app.core.config import settings
 from backend.app.schemas.Google import EmailWatchResponse
 from backend.app.schemas.Email import EmailSchema
+from email.utils import parsedate_to_datetime
 
 
 class Gmail:
@@ -74,8 +75,37 @@ class Gmail:
 
         return base64.urlsafe_b64encode(message.as_bytes()).decode("ascii")
 
-    def receive_emails(self, start_history_id: str) -> List[EmailSchema]:
+    def _get_emails(self, message_dict: Dict[str, Dict]) -> List[EmailSchema]:
+        return [self._get_email_details(msg_id) for msg_id in message_dict.keys()]
+
+    def receive_emails(self, limit: int) -> List[EmailSchema]:
         service = self._get_service()
+        response = (
+            service.users().messages().list(userId="me", maxResults=limit).execute()
+        )
+        return self._get_emails(
+            {msg["id"]: msg for msg in response.get("messages", [])}
+        )
+
+    def receive_emails_by_history_id(
+        self, start_history_id: Optional[str] = None
+    ) -> List[EmailSchema]:
+        service = self._get_service()
+
+        if not start_history_id:
+            emails = self.receive_emails(10)
+
+            start_history_id = (
+                service.users()
+                .messages()
+                .get(
+                    userId="me",
+                    id=emails[-1].message_id,
+                    format="minimal",
+                )
+                .execute()
+                .get("historyId")
+            )
 
         try:
             history_response = (
@@ -99,13 +129,7 @@ class Gmail:
                     if msg and "id" in msg:
                         message_dict[msg["id"]] = msg
 
-            emails = []
-            for msg_id in message_dict.keys():
-                email = self._get_email_details(msg_id)
-                if email:
-                    emails.append(email)
-
-            return emails
+            return self._get_emails(message_dict)
 
         except HttpError as error:
             if error.resp.status in (400, 404):
@@ -115,15 +139,6 @@ class Gmail:
             return []
 
     def _get_email_details(self, message_id: str) -> EmailSchema:
-        """
-        Get detailed information about a specific email.
-
-        Args:
-            message_id: Gmail message ID
-
-        Returns:
-            Dictionary with email details
-        """
         service = self._get_service()
 
         try:
@@ -137,6 +152,8 @@ class Gmail:
             headers = message["payload"]["headers"]
             subject = next((h["value"] for h in headers if h["name"] == "Subject"), "")
             from_email = next((h["value"] for h in headers if h["name"] == "From"), "")
+            date_str = next((h["value"] for h in headers if h["name"] == "Date"), "")
+            date = parsedate_to_datetime(date_str) if date_str else None
 
             # Extract email body
             body = self._get_email_body(message["payload"])
@@ -146,21 +163,13 @@ class Gmail:
                 subject=subject,
                 from_email=from_email,
                 body=body,
+                date=date,
             )
         except HttpError as error:
             print(f"Error getting email details: {error}")
             return None
 
     def _get_email_body(self, payload: Dict[str, Any]) -> str:
-        """
-        Extract email body from payload.
-
-        Args:
-            payload: Email message payload
-
-        Returns:
-            Email body text
-        """
         if "parts" in payload:
             # Handle multipart messages
             for part in payload["parts"]:
@@ -176,15 +185,6 @@ class Gmail:
         return ""
 
     def _decode_body(self, body: Dict[str, Any]) -> str:
-        """
-        Decode email body from base64.
-
-        Args:
-            body: Email body dictionary
-
-        Returns:
-            Decoded body text
-        """
         if "data" in body:
             data = body["data"].replace("-_", "+").replace("_", "/")
             return base64.urlsafe_b64decode(data).decode("utf-8")
