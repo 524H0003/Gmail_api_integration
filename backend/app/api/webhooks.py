@@ -24,7 +24,7 @@ async def gmail_webhook(
         history_id = notification["historyId"]
 
         history_id_db = GmailHistoryRepo(db_session)
-        emails = gmail.receive_emails(history_id_db.get())
+        emails = gmail.receive_emails(history_id_db.get() or history_id)
         if not len(emails) == 0: 
             history_id_db.create(history_id)
 

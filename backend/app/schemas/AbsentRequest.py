@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 from uuid import UUID
 
@@ -33,5 +33,6 @@ class AbsentRequestResponsePublic(BaseModel):
     absent_type: str
     start_date: date
     end_date: date
+    created_at: datetime
     reason: str
     status: Literal["pending", "approved", "rejected"]

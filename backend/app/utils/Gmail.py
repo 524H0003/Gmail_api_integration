@@ -91,22 +91,27 @@ class Gmail:
 
             histories = history_response.get("history", [])
 
-            messages = []
+            message_dict = {}
             for history in histories:
-                messages_added = history.get("messageAdded", [])
+                messages_added = history.get("messagesAdded", [])
                 for message_item in messages_added:
-                    messages.append(message_item["message"])
+                    msg = message_item.get("message")
+                    if msg and "id" in msg:
+                        message_dict[msg["id"]] = msg
 
             emails = []
-
-            for msg in messages:
-                email = self._get_email_details(msg["id"])
+            for msg_id in message_dict.keys():
+                email = self._get_email_details(msg_id)
                 if email:
                     emails.append(email)
 
             return emails
+
         except HttpError as error:
-            print(f"Error receiving emails: {error}")
+            if error.resp.status in (400, 404):
+                print(f"startHistoryId {start_history_id} is invalid or expired.")
+            else:
+                print(f"Error receiving emails: {error}")
             return []
 
     def _get_email_details(self, message_id: str) -> EmailSchema:
@@ -206,15 +211,6 @@ class Gmail:
             return EmailWatchResponse(success=False, error=str(error))
 
     def mark_as_read(self, message_id: str) -> Dict[str, Any]:
-        """
-        Mark an email as read.
-
-        Args:
-            message_id: Gmail message ID
-
-        Returns:
-            Response dictionary
-        """
         service = self._get_service()
 
         try:
@@ -227,15 +223,6 @@ class Gmail:
             return {"success": False, "error": str(error)}
 
     def delete_message(self, message_id: str) -> Dict[str, Any]:
-        """
-        Delete an email.
-
-        Args:
-            message_id: Gmail message ID
-
-        Returns:
-            Response dictionary
-        """
         service = self._get_service()
 
         try:

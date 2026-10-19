@@ -1,9 +1,9 @@
 # Google Cloud
 ## Tạo project
 ```bash
-# 1. Đặt ID cho project
+# 1. Khai báo biến
 export PROJECT_ID="gmail-pubsub-$(date +%s)"
-export WEBHOOK_URL="https://your-domain.com/api/webhook" # Thay URL webhook của bạn ở đây
+export WEBHOOK_URL=" https://94a2-171-250-208-33.ngrok-free.app/api/webhook" # Cập nhật URL Ngrok của bạn
 
 # 2. Tạo Project mới
 gcloud projects create $PROJECT_ID --name="Gmail PubSub Automation"
@@ -21,11 +21,13 @@ else
 fi
 
 # 5. Kích hoạt Gmail API & Pub/Sub API
+echo "Đang kích hoạt APIs..."
 gcloud services enable gmail.googleapis.com pubsub.googleapis.com
-sleep 60
+sleep 15
 
-# 6. Tạo Pub/Sub Topic
-gcloud pubsub topics create gmail-notifications
+# 6. Tạo Pub/Sub Topic (Đã bổ sung cờ Region để vượt qua lỗi Org Policy)
+gcloud pubsub topics create gmail-notifications \
+  --message-storage-policy-allowed-regions=us-central1
 
 # 7. Cấp quyền Publisher cho Gmail Service Account
 gcloud pubsub topics add-iam-policy-binding gmail-notifications \
@@ -37,6 +39,8 @@ gcloud pubsub subscriptions create gmail-push-sub \
   --topic=gmail-notifications \
   --push-endpoint="$WEBHOOK_URL" \
   --ack-deadline=30
+
+echo "=== HOÀN TẤT THIẾT LẬP ==="
 ```
 
 ## Lấy credentials.json

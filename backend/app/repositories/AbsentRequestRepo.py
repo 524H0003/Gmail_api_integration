@@ -49,13 +49,17 @@ class AbsentRequestRepo:
 
         approve_mailto = html.escape(
             gmail.build_mailto(
-                self.sender_email, str(request.id), f"APPROVE {request.security_code}"
+                self.sender_email,
+                str(request.id),
+                f"{AbsentStatus.APPROVED} {request.security_code}",
             ),
             quote=True,
         )
         reject_mailto = html.escape(
             gmail.build_mailto(
-                self.sender_email, str(request.id), f"REJECT {request.security_code}"
+                self.sender_email,
+                str(request.id),
+                f"{AbsentStatus.REJECTED} {request.security_code}",
             ),
             quote=True,
         )
@@ -79,9 +83,6 @@ class AbsentRequestRepo:
         start_date: date,
         end_date: date,
         reason: str,
-        status: AbsentStatus = AbsentStatus.PENDING,
-        gmail_message_id: Optional[str] = None,
-        decision_message_id: Optional[str] = None,
     ) -> AbsentRequest:
         security_code = secrets.token_hex(3).upper()
 
@@ -91,9 +92,6 @@ class AbsentRequestRepo:
             start_date=start_date,
             end_date=end_date,
             reason=reason,
-            status=status.value,
-            gmail_message_id=gmail_message_id,
-            decision_message_id=decision_message_id,
             security_code=security_code,
         )
 
@@ -101,17 +99,21 @@ class AbsentRequestRepo:
         self.db_session.commit()
         self.db_session.refresh(new_request)
 
-        gmail.send_email(
+        message_id = gmail.send_email(
             self.manager_email,
             f"Absent request from {employee.name}",
             self._build_mail(employee, new_request),
-        )
+        )["message_id"]
+
+        new_request.gmail_message_id = message_id
+
+        self.db_session.add(new_request)
+        self.db_session.commit()
+        self.db_session.refresh(new_request)
 
         return new_request
 
-    def get_absent_request_by_id(
-        self, request_id: uuid.UUID
-    ) -> Optional[AbsentRequest]:
+    def get_absent_request_by_id(self, request_id: str) -> Optional[AbsentRequest]:
         return self.db_session.get(AbsentRequest, request_id)
 
     def get_absent_requests_by_employee(
@@ -128,4 +130,49 @@ class AbsentRequestRepo:
 
         return self.db_session.execute(query).scalars().all()
 
-    
+    def processing_emails(self, emails: list[EmailSchema]):
+        for email in emails:
+            try:
+                if not email.from_email == settings.manager_email:
+                    continue
+
+                request = self.get_absent_request_by_id(email.subject)
+
+                if not request:
+                    raise LookupError(f"Request not found: {email.subject}")
+
+                gmail.mark_as_read(email.message_id)
+
+                body = email.body.strip()
+                [status, security_code] = body.split(" ")
+
+                if not security_code == request.security_code:
+                    raise ValueError(f"Invalid security code: {email.subject}")
+
+                if not request.status == AbsentStatus.PENDING:
+                    raise ValueError("Invalid request")
+
+                self.update_absent_request_status(request.id, status, email.message_id)
+
+            except Exception as e:
+                print(e)
+                continue
+
+    def update_absent_request_status(
+        self,
+        request_id: uuid.UUID,
+        status: str,
+        decision_message_id: Optional[str] = None,
+    ) -> AbsentRequest:
+        request = self.get_absent_request_by_id(str(request_id))
+        if not request:
+            raise LookupError("Request not found")
+
+        request.status = status
+        if decision_message_id:
+            request.decision_message_id = decision_message_id
+
+        self.db_session.commit()
+        self.db_session.refresh(request)
+
+        return request
