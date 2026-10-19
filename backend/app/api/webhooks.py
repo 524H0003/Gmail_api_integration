@@ -2,11 +2,11 @@ from base64 import b64decode
 from json import JSONDecodeError, loads
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
-from pytest import Session
 
 from app.schemas.Google import PubSubEnvelope
 from app.utils.Gmail import gmail
 from app.db.session import get_db_session
+from sqlalchemy.orm import Session
 from app.repositories.GmailHistoryRepo import GmailHistoryRepo
 from app.repositories.AbsentRequestRepo import AbsentRequestRepo
 
@@ -25,7 +25,7 @@ async def gmail_webhook(
 
         history_id_db = GmailHistoryRepo(db_session)
         emails = gmail.receive_emails(history_id_db.get() or history_id)
-        if not len(emails) == 0: 
+        if not len(emails) == 0:
             history_id_db.create(history_id)
 
         absentRequestRepo = AbsentRequestRepo(db_session)

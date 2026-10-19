@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 

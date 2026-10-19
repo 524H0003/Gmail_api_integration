@@ -2,7 +2,7 @@ from datetime import date
 import uuid
 
 from sqlalchemy import UUID, Date, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 from app.types import AbsentStatus
