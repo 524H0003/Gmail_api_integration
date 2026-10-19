@@ -1,7 +1,7 @@
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from app.models.GmailHistory import GmailHistory
+from backend.app.models.GmailHistory import GmailHistory
 
 
 class GmailHistoryRepo:

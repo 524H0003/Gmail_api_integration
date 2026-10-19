@@ -1,5 +1,5 @@
 from fastapi import Request, Response
-from app.core.config import settings
+from backend.app.core.config import settings
 
 
 class Cookie:

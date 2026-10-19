@@ -4,10 +4,10 @@ from typing import List, Dict, Any
 from urllib.parse import quote
 from googleapiclient.errors import HttpError
 
-from app.utils.Google import google
-from app.core.config import settings
-from app.schemas.Google import EmailWatchResponse
-from app.schemas.Email import EmailSchema
+from backend.app.utils.Google import google
+from backend.app.core.config import settings
+from backend.app.schemas.Google import EmailWatchResponse
+from backend.app.schemas.Email import EmailSchema
 
 
 class Gmail:

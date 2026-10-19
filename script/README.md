@@ -1,14 +1,13 @@
 # Gửi email Hello World bằng Gmail API
 
-Script `send_hello_world.py` gửi một email text đơn giản bằng Gmail API và OAuth 2.0. Lần chạy đầu sẽ mở trình duyệt để cấp quyền; các lần sau dùng token đã lưu trong `script/token.json`.
+Script `send&recieve.py` gửi một email text đơn giản bằng Gmail API và OAuth 2.0. Lần chạy đầu sẽ mở trình duyệt để cấp quyền; các lần sau dùng token đã lưu trong `token.json`.
 
 ## Requirements
 
 - Python 3.10 trở lên.
 - Một tài khoản Gmail có quyền gửi email.
 - Một Google Cloud project đã bật Gmail API.
-- OAuth 2.0 Desktop App client JSON, lưu tại `script/credentials.json` hoặc truyền qua `--credentials`.
-- Các package Python trong `script/requirements.txt`: `google-api-python-client`, `google-auth-httplib2` và `google-auth-oauthlib`.
+- OAuth 2.0 Desktop App client JSON, lưu tại `credentials.json`.
 - Trình duyệt để hoàn tất OAuth ở lần chạy đầu tiên.
 
 ## 1. Tạo Google Cloud project và bật Gmail API
@@ -42,7 +41,6 @@ Tài liệu chính thức:
 Từ thư mục gốc repository, tạo một môi trường ảo riêng cho script:
 
 ```bash
-cd script
 python3 -m venv .venv
 source .venv/bin/activate # Linux
 .venv/Scripts/Activate.ps1 # Windows
@@ -54,29 +52,15 @@ Sau khi kích hoạt môi trường ảo, chạy script từ thư mục `script`
 ## 3. Gửi email
 
 ```bash
-python send_hello_world.py nguoi-nhan@example.com
+python -m "script.send&recieve" send nguoi-nhan@example.com
 ```
 
 Tuỳ chỉnh subject và nội dung:
 
 ```bash
-python send_hello_world.py nguoi-nhan@example.com \
+python -m "script.send&recieve" send nguoi-nhan@example.com \
   --subject "Test Gmail API" \
   --body "Hello World từ Gmail API"
 ```
 
-Nếu đặt OAuth client ở nơi khác, truyền đường dẫn rõ ràng:
-
-```bash
-python send_hello_world.py nguoi-nhan@example.com \
-  --credentials /path/to/credentials.json \
-  --token /path/to/token.json
-```
-
 Lần đầu đăng nhập, chọn tài khoản Gmail gửi thư và chấp nhận quyền gửi email. Nếu Google hiện cảnh báo ứng dụng chưa được xác minh, chỉ tiếp tục khi đây là project của bạn và tài khoản đã được thêm vào danh sách test users.
-
-## Lưu ý bảo mật
-
-- Không commit `credentials.json` hoặc `token.json`; cả hai đã được thêm vào `.gitignore`.
-- Scope của script là `gmail.send`, chỉ đủ để gửi email.
-- Nếu đổi Google account hoặc scope mà token cũ gây lỗi, xoá `script/token.json` rồi chạy lại để cấp quyền.

@@ -156,8 +156,8 @@ env.bak/
 venv.bak/
 
 # Local Gmail OAuth files
-script/credentials.json
-script/token.json
+**/credentials.json
+**/token.json
 
 # Spyder project settings
 .spyderproject
@@ -210,11 +210,8 @@ node_modules/
 frontend/dist/
 
 # Local application state
-backend/gmail-token.json
-backend/credentials.json
-backend/token.json
 secrets/
-backend/*.db
+**/*.db
 
 # Ruff stuff:
 .ruff_cache/

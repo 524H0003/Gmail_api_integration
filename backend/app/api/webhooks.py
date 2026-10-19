@@ -3,12 +3,12 @@ from json import JSONDecodeError, loads
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
-from app.schemas.Google import PubSubEnvelope
-from app.utils.Gmail import gmail
-from app.db.session import get_db_session
+from backend.app.schemas.Google import PubSubEnvelope
+from backend.app.utils.Gmail import gmail
+from backend.app.db.session import get_db_session
 from sqlalchemy.orm import Session
-from app.repositories.GmailHistoryRepo import GmailHistoryRepo
-from app.repositories.AbsentRequestRepo import AbsentRequestRepo
+from backend.app.repositories.GmailHistoryRepo import GmailHistoryRepo
+from backend.app.repositories.AbsentRequestRepo import AbsentRequestRepo
 
 router = APIRouter(prefix="/webhooks")
 

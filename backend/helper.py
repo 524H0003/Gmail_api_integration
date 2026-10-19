@@ -1,6 +1,6 @@
-from app.utils.Auth import auth
-from app.repositories.UserRepo import UserRepository
-from app.db.session import get_db_session
+from backend.app.utils.Auth import auth
+from backend.app.repositories.UserRepo import UserRepository
+from backend.app.db.session import get_db_session
 
 
 def create_user(username: str, email: str, password: str, name: str) -> None:

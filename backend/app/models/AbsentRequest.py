@@ -4,8 +4,8 @@ import uuid
 from sqlalchemy import UUID, Date, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
-from app.types import AbsentStatus
+from backend.app.db.base import Base
+from backend.app.types import AbsentStatus
 
 
 class AbsentRequest(Base):

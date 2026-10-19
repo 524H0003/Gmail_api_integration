@@ -1,8 +1,8 @@
 from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-from app.core.config import settings
-from app.db.base import Base
+from backend.app.core.config import settings
+from backend.app.db.base import Base
 
 engine = create_engine(
     settings.database_url,

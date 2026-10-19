@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db_session
-from app.core.config import settings
-from app.schemas.User import UserInfo
-from app.api.auth import current_user
-from app.schemas.AbsentRequest import AbsentRequestCreate, AbsentRequestResponsePublic
-from app.repositories.AbsentRequestRepo import AbsentRequestRepo
+from backend.app.db.session import get_db_session
+from backend.app.core.config import settings
+from backend.app.schemas.User import UserInfo
+from backend.app.api.auth import current_user
+from backend.app.schemas.AbsentRequest import AbsentRequestCreate, AbsentRequestResponsePublic
+from backend.app.repositories.AbsentRequestRepo import AbsentRequestRepo
 
 router = APIRouter(prefix="/absent-requests")
 

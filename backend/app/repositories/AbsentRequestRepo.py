@@ -9,12 +9,12 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.AbsentRequest import AbsentRequest
-from app.types import AbsentStatus
-from app.utils.Gmail import gmail
-from app.core.config import settings
-from app.schemas.User import UserInfo
-from app.schemas.Email import EmailSchema
+from backend.app.models.AbsentRequest import AbsentRequest
+from backend.app.types import AbsentStatus
+from backend.app.utils.Gmail import gmail
+from backend.app.core.config import settings
+from backend.app.schemas.User import UserInfo
+from backend.app.schemas.Email import EmailSchema
 
 
 class AbsentRequestRepo:

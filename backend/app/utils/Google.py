@@ -3,7 +3,7 @@ from typing import Optional
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from app.core.config import settings
+from backend.app.core.config import settings
 from googleapiclient.discovery import build
 from typing import ParamSpec, TypeVar
 

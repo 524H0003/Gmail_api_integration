@@ -1,6 +1,6 @@
 from sqlalchemy import String, Text
 
-from app.db.base import Base
+from backend.app.db.base import Base
 from sqlalchemy.orm import Mapped, mapped_column
 
 

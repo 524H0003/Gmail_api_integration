@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 import uvicorn
 
 
-from app.utils.Gmail import gmail
+from backend.app.utils.Gmail import gmail
 
 
 
@@ -46,7 +46,7 @@ async def add_request_id(request: Request, call_next):
     return response
 
 
-from app.api import auth, absentRequests, webhooks
+from backend.app.api import auth, absentRequests, webhooks
 
 app.include_router(router=auth.router)
 app.include_router(router=absentRequests.router)

@@ -16,4 +16,4 @@ class Base(DeclarativeBase):
     )
 
 
-from app.models import AbsentRequest, User, GmailHistory
+from backend.app.models import AbsentRequest, User, GmailHistory
