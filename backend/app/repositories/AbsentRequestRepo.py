@@ -29,6 +29,10 @@ class AbsentRequestRepo:
             raise KeyError("Missing MANAGER_EMAIL environment value")
         self.manager_email = settings.manager_email
 
+        if not settings.sender_email:
+            raise KeyError("Missing SENDER_EMAIL environment value")
+        self.sender_email = settings.sender_email
+
         if not settings.email_template_file:
             raise KeyError("Missing EMAIL_TEMPLATE_FILE environment value")
         self.email_template_file = settings.email_template_file

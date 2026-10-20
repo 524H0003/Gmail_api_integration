@@ -22,11 +22,11 @@ ngrok http 8080
 
 ### Bước 3
 
-Lấy project id và tên miền ngrok lần lượt dán vào `{ID project}` và `{Webhook Endpoint}` vào script này
+Lấy project id và tên miền ngrok lần lượt dán vào `{ID_project}` và `{Webhook_Endpoint}` vào script này
 
 ```
 provider "google" {
-  project = "{ID project}"
+  project = "{ID_project}"
 }
 
 # 1. Bật các API cần thiết
@@ -58,7 +58,7 @@ resource "google_pubsub_subscription" "gmail_sub" {
   topic = google_pubsub_topic.gmail_topic.name
 
   push_config {
-    push_endpoint = "{Webhook Endpoint}/api/webhooks/gmail"
+    push_endpoint = "{Webhook_Endpoint}/api/webhooks/gmail"
   }
 }
 ```
@@ -69,7 +69,7 @@ Vào [web](https://console.cloud.google.com/welcome?cloudshell=true) này và ch
 
 ```bash
 cat << 'EOF' > main.tf
-{Script ở bước 3}
+{Script_ở_bước_3}
 EOF
 ```
 
@@ -126,16 +126,23 @@ Truyền giá trị project id vào câu lệnh này và chạy trước khi kh�
 
 ```bash
 cat << 'EOF' > .env
-pubsub_oidc_topic=projects/{ID project}/topics/gmail-notifications-topic
-manager_email={Email người quản lý}
+pubsub_oidc_topic=projects/{ID_project}/topics/gmail-notifications-topic
+manager_email={Email_người_quản_lý}
+sender_email={Email_hệ_thống}
 EOF
 ```
 
 **Windows (Command Prompt):**
 
 ```cmd
-echo pubsub_oidc_topic=projects/{ID project}/topics/gmail-notifications-topic >> .env
-echo manager_email={Email người quản lý} >> .env
+echo pubsub_oidc_topic=projects/{ID_project}/topics/gmail-notifications-topic >> .env
+echo manager_email={Email_người_quản_lý} >> .env
+echo sender_email={Email_hệ_thống} >> .env
+```
+
+Biên dịch frontend trước khi chạy lệnh
+```bash
+cd frontend && pnpm build
 ```
 
 ### Lệnh khởi chạy

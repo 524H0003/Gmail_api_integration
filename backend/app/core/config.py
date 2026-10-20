@@ -4,7 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", extra="ignore", env_file_encoding="utf-8"
+    )
 
     database_url: str = "sqlite:///./absent_requests.db"
 
@@ -22,6 +24,7 @@ class Settings(BaseSettings):
 
     # App configuration
     manager_email: str = ""
+    sender_email: str = ""
     email_template_file: str = "templates/absent_request.html"
 
 
