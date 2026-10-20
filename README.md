@@ -2,6 +2,22 @@
 
 ## Tạo project
 
+### Bước 1
+
+Tạo một project thủ công tại [đây](https://console.cloud.google.com/projectcreate)
+
+### Bước 2
+
+Khởi chạy ngrok với cổng 8080
+
+```bash
+ngrok http 8080
+```
+
+### Bước 3
+
+Lấy project id và tên miền ngrok lần lượt dán vào `{ID project}` và `{Webhook Endpoint}` vào script này
+
 ```
 provider "google" {
   project = "{ID project}"
@@ -41,10 +57,39 @@ resource "google_pubsub_subscription" "gmail_sub" {
 }
 ```
 
+### Bước 4
+
+Vào [web](https://console.cloud.google.com/welcome?cloudshell=true) này và chạy lệnh sau đây trong terminal
+
+```bash
+cat << 'EOF' > main.tf
+{Script ở bước 3}
+EOF
+```
+
+### Bước 5
+
+Cài terraform
+
+```bash
+wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
+bash
+```
+
+và chạy lệnh
+
+```bash
+terraform init
+terraform apply
+```
+
 ## Lấy credentials.json
 
 - Đầu tiên, cấu hình OAuth consent screen tại [Google Auth Platform](https://console.cloud.google.com/auth/overview) và chọn **External**.
-- Tiếp theo, vào trang [web](https://console.cloud.google.com/apis/credentials). Chọn **Create Credentials** -> **OAuth client ID** -> **Desktop app**.
+- Tiếp theo, vào trang [web](https://console.cloud.google.com/apis/credentials). Chọn **Create Credentials** -> **OAuth client ID** -> **Desktop app**. Tải file json và đặt vào thư mục với tên `credentials.json`
+- Cuối cùng, thêm email vào test user tại [đây](https://console.cloud.google.com/auth/audience)
 
 # Scripts
 
