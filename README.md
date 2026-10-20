@@ -7,6 +7,12 @@
 - [ngrok cli](https://ngrok.com/download) (kèm với tài khoản)
 - Tài khoản Google
 
+### Lệnh cài nhanh cho Windows
+
+```ps
+winget install ngrok.ngrok; winget install JSFoundation.pnpm; winget install Python.Python.3.12
+```
+
 ## Tạo project
 
 ### Bước 1
