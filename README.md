@@ -101,6 +101,28 @@ python -m backend.helper create-user --name "Nguyen Viet Anh" --username vanh --
 
 ## Khởi động ứng dụng
 
+### Yêu cầu
+
+Truyền giá trị project id vào câu lệnh này và chạy trước khi khởi chạy ứng dụng
+
+**Linux/Mac:**
+
+```bash
+cat << 'EOF' > .env
+pubsub_oidc_topic=projects/{ID project}/topics/gmail-notifications-topic
+manager_email={Email người quản lý}
+EOF
+```
+
+**Windows (Command Prompt):**
+
+```cmd
+echo pubsub_oidc_topic=projects/{ID project}/topics/gmail-notifications-topic >> .env
+echo manager_email={Email người quản lý} >> .env
+```
+
+### Lệnh khởi chạy
+
 ```bash
 python -m backend.app.main
 ```

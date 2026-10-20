@@ -22,7 +22,6 @@ class Settings(BaseSettings):
 
     # App configuration
     manager_email: str = ""
-    sender_email: str = ""
     email_template_file: str = "templates/absent_request.html"
 
 
