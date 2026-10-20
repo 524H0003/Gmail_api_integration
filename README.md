@@ -101,6 +101,15 @@ khi gặp lỗi, vui lòng kích hoạt [service](https://console.cloud.google.c
 
 # Scripts
 
+Từ thư mục gốc repository, tạo một môi trường ảo riêng cho script:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate # Linux
+.venv/Scripts/Activate.ps1 # Windows
+python -m pip install -r requirements.txt
+```
+
 ## Tạo người dùng
 
 ```bash
