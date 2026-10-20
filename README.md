@@ -120,7 +120,7 @@ python -m backend.helper create-user --name "Nguyen Viet Anh" --username vanh --
 
 ### Yêu cầu
 
-Truyền giá trị project id vào câu lệnh này và chạy trước khi khởi chạy ứng dụng
+Truyền giá trị project id và 2 địa chỉ email vào câu lệnh này và chạy trước khi khởi chạy ứng dụng
 
 **Linux/Mac:**
 
@@ -141,6 +141,7 @@ echo sender_email={Email_hệ_thống} >> .env
 ```
 
 Biên dịch frontend trước khi chạy lệnh
+
 ```bash
 cd frontend && pnpm build
 ```
