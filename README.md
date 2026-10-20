@@ -1,5 +1,11 @@
 # Google Cloud
 
+## Yêu cầu
+
+- ngrok (kèm với tài khoản)
+- python
+- Tài khoản Google
+
 ## Tạo project
 
 ### Bước 1
@@ -8,7 +14,7 @@ Tạo một project thủ công tại [đây](https://console.cloud.google.com/p
 
 ### Bước 2
 
-Khởi chạy ngrok với cổng 8080
+Xác thực ngrok theo [hướng dẫn](https://dashboard.ngrok.com/get-started/your-authtoken) và khởi chạy ngrok với cổng 8080
 
 ```bash
 ngrok http 8080
@@ -84,6 +90,8 @@ và chạy lệnh
 terraform init
 terraform apply
 ```
+
+khi gặp lỗi, vui lòng kích hoạt [service](https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com) và thử lại
 
 ## Lấy credentials.json
 
