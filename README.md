@@ -2,15 +2,16 @@
 
 ## Yêu cầu
 
-- ngrok (kèm với tài khoản)
-- python
+- [python](https://www.python.org/downloads/)
+- [pnpm](https://pnpm.io/installation)
+- [ngrok cli](https://ngrok.com/download) (kèm với tài khoản)
 - Tài khoản Google
 
 ## Tạo project
 
 ### Bước 1
 
-Tạo một project thủ công tại [đây](https://console.cloud.google.com/projectcreate)
+Tạo một project tại [đây](https://console.cloud.google.com/projectcreate)
 
 ### Bước 2
 
@@ -22,7 +23,7 @@ ngrok http 8080
 
 ### Bước 3
 
-Lấy project id và tên miền ngrok lần lượt dán vào `{ID_project}` và `{Webhook_Endpoint}` vào script này
+Lấy project id và tên miền ngrok lần lượt dán vào `{ID_project}` và `{Web_URL}` vào script này
 
 ```
 provider "google" {
@@ -58,7 +59,7 @@ resource "google_pubsub_subscription" "gmail_sub" {
   topic = google_pubsub_topic.gmail_topic.name
 
   push_config {
-    push_endpoint = "{Webhook_Endpoint}/api/webhooks/gmail"
+    push_endpoint = "{Web_URL}/api/webhooks/gmail"
   }
 }
 ```
@@ -84,14 +85,12 @@ sudo apt update && sudo apt install terraform
 bash
 ```
 
-và chạy lệnh
+Kích hoạt [service](https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com) và chạy lệnh
 
 ```bash
 terraform init
 terraform apply
 ```
-
-khi gặp lỗi, vui lòng kích hoạt [service](https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com) và thử lại
 
 ## Lấy credentials.json
 
@@ -104,7 +103,7 @@ khi gặp lỗi, vui lòng kích hoạt [service](https://console.cloud.google.c
 Từ thư mục gốc repository, tạo một môi trường ảo riêng cho script:
 
 ```bash
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate # Linux
 .venv/Scripts/Activate.ps1 # Windows
 python -m pip install -r requirements.txt
@@ -143,7 +142,7 @@ echo sender_email={Email_hệ_thống} >> .env
 Biên dịch frontend trước khi chạy lệnh
 
 ```bash
-cd frontend && pnpm build
+cd frontend && pnpm build && cd ..
 ```
 
 ### Lệnh khởi chạy
