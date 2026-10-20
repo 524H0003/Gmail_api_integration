@@ -168,7 +168,8 @@ class AbsentRequestRepo:
         if not request:
             raise LookupError("Request not found")
 
-        request.status = status
+        request.status = AbsentStatus(status)
+
         if decision_message_id:
             request.decision_message_id = decision_message_id
 
