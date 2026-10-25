@@ -7,11 +7,14 @@
 - [ngrok cli](https://ngrok.com/download) (kèm với tài khoản)
 - Tài khoản Google
 
-### Lệnh cài nhanh cho Windows
+### Lệnh cài nhanh cho Windows (Chạy bằng Powershell, với quyền quản trị viên)
 
 ```ps
-winget install ngrok.ngrok; winget install JSFoundation.pnpm; winget install Python.Python.3.12
+winget install ngrok.ngrok; winget install pnpm.pnpm; winget install Python.Python.3.12
+
+ngrok update
 ```
+Nhập Y để chấp nhận
 
 ## Tạo project
 
@@ -82,7 +85,7 @@ EOF
 
 ### Bước 5
 
-Cài terraform
+Cài terraform trên Google cloud console
 
 ```bash
 wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
@@ -97,6 +100,8 @@ Kích hoạt [service](https://console.cloud.google.com/apis/api/cloudresourcema
 terraform init
 terraform apply
 ```
+
+Nhập `yes` để xác nhận
 
 ## Lấy credentials.json
 
@@ -125,30 +130,20 @@ python -m backend.helper create-user --name "Nguyen Viet Anh" --username vanh --
 
 ### Yêu cầu
 
-Truyền giá trị project id và 2 địa chỉ email vào câu lệnh này và chạy trước khi khởi chạy ứng dụng
+Truyền giá trị project id và 2 địa chỉ email vào .env và chạy trước khi khởi chạy ứng dụng
 
-**Linux/Mac:**
-
-```bash
-cat << 'EOF' > .env
+```env
 pubsub_oidc_topic=projects/{ID_project}/topics/gmail-notifications-topic
 manager_email={Email_người_quản_lý}
-sender_email={Email_hệ_thống}
-EOF
-```
-
-**Windows (Command Prompt):**
-
-```cmd
-echo pubsub_oidc_topic=projects/{ID_project}/topics/gmail-notifications-topic >> .env
-echo manager_email={Email_người_quản_lý} >> .env
-echo sender_email={Email_hệ_thống} >> .env
+sender_email={Email_hệ_thống} 
 ```
 
 Biên dịch frontend trước khi chạy lệnh
 
 ```bash
-cd frontend && pnpm build && cd ..
+cd frontend
+pnpm build
+cd ..
 ```
 
 ### Lệnh khởi chạy
