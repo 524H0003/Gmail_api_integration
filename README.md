@@ -130,7 +130,7 @@ python -m backend.helper create-user --name "Nguyen Viet Anh" --username vanh --
 
 ### Yêu cầu
 
-Truyền giá trị project id và 2 địa chỉ email vào .env và chạy trước khi khởi chạy ứng dụng
+Truyền giá trị *google cloud project id* và *2 địa chỉ email* tương ứng vào .env trước khi khởi chạy ứng dụng
 
 ```env
 pubsub_oidc_topic=projects/{ID_project}/topics/gmail-notifications-topic
@@ -146,7 +146,7 @@ pnpm build
 cd ..
 ```
 
-### Lệnh khởi chạy
+### Lệnh chạy
 
 ```bash
 python -m backend.app.main
