@@ -40,6 +40,12 @@ def parse_args() -> argparse.Namespace:
     receive_parser.add_argument(
         "--limit", type=int, default=10, help="Number of emails to display"
     )
+    # Thêm flag --unread
+    receive_parser.add_argument(
+        "--unread",
+        action="store_true",
+        help="Only fetch unread emails",
+    )
 
     return parser.parse_args()
 
@@ -67,9 +73,9 @@ def main() -> None:
         )
         print(f"Email sent successfully. Gmail message id: {message_id}")
     elif args.command == "receive":
-        emails = gmail.receive_emails(limit=args.limit)
+        emails = gmail.receive_emails(limit=args.limit, unread_only=args.unread)
         if not emails:
-            print("No new emails found.")
+            print("No emails found.")
         else:
             table_data = []
             for i, email in enumerate(emails):
@@ -77,13 +83,10 @@ def main() -> None:
 
             headers = ["No", "From", "Subject", "Date"]
 
+            choice = -1
+
             while True:
                 try:
-                    choice = int(
-                        input(
-                            "\nEnter email number to view details (0 to exit; -1 to show emails): "
-                        )
-                    )
                     if choice == 0:
                         break
                     elif choice == -1:
@@ -92,6 +95,12 @@ def main() -> None:
                         display_email_details(emails[choice - 1])
                     else:
                         print("Invalid email number. Please try again.")
+
+                    choice = int(
+                        input(
+                            "\nEnter email number to view details (0 to exit; -1 to show emails): "
+                        )
+                    )
                 except ValueError:
                     print("Please enter a valid number.")
 

@@ -84,11 +84,20 @@ class Gmail:
                 emails.append(detail)
         return emails
 
-    def receive_emails(self, limit: int) -> List[EmailSchema]:
+    def receive_emails(
+        self, limit: int = 10, unread_only: bool = False
+    ) -> List[EmailSchema]:
         service = self._get_service()
+
+        query = "is:unread" if unread_only else None
+
         response = (
-            service.users().messages().list(userId="me", maxResults=limit).execute()
+            service.users()
+            .messages()
+            .list(userId="me", maxResults=limit, q=query)
+            .execute()
         )
+
         return self._get_emails(
             {msg["id"]: msg for msg in response.get("messages", [])}
         )
