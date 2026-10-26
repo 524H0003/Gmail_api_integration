@@ -1,4 +1,4 @@
-# Google Cloud
+# Email Integration - Gmail API
 
 ## Yêu cầu
 
@@ -32,7 +32,7 @@ ngrok http 8080
 
 ### Bước 3
 
-Lấy project id và tên miền ngrok lần lượt dán vào `{ID_project}` và `{Web_URL}` vào script này
+Lấy *google cloud project id* và *tên miền ngrok* lần lượt dán vào `{ID_project}` và `{Web_URL}` vào script ở dưới
 
 ```
 provider "google" {
@@ -75,7 +75,7 @@ resource "google_pubsub_subscription" "gmail_sub" {
 
 ### Bước 4
 
-Vào [web](https://console.cloud.google.com/welcome?cloudshell=true) này và chạy lệnh sau đây trong terminal
+Vào [web](https://console.cloud.google.com/welcome?cloudshell=true) này và chạy lệnh sau đây trong cloud shell
 
 ```bash
 cat << 'EOF' > main.tf
@@ -85,7 +85,7 @@ EOF
 
 ### Bước 5
 
-Cài terraform trên Google cloud console
+Cài terraform trên Google cloud shell
 
 ```bash
 wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
@@ -94,7 +94,7 @@ sudo apt update && sudo apt install terraform
 bash
 ```
 
-Kích hoạt [service](https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com) và chạy lệnh
+Kích hoạt [service](https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com) và chạy lệnh sau đây trên cloud shell
 
 ```bash
 terraform init
