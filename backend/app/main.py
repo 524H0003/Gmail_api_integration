@@ -15,7 +15,6 @@ import uvicorn
 from backend.app.utils.Gmail import gmail
 
 
-
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Khởi động Gmail watch
@@ -72,4 +71,4 @@ else:
     print(f"CẢNH BÁO: Thư mục frontend không tồn tại tại {DIST_DIR}")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, port=8080)

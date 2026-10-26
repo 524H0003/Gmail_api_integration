@@ -1,5 +1,6 @@
 import base64
 from email.message import EmailMessage
+import threading
 from typing import List, Dict, Any, Optional
 from urllib.parse import quote
 from googleapiclient.errors import HttpError
@@ -20,17 +21,17 @@ class Gmail:
     pubsub_oidc_topic: str = ""
 
     def __init__(self):
-        self.service = None
+        self._local = threading.local()  # <-- Tạo thread-local storage
 
         if not settings.pubsub_oidc_topic:
             raise KeyError("Missing PUBSUB_OIDC_TOPIC environment value")
         self.pubsub_oidc_topic = settings.pubsub_oidc_topic
 
     def _get_service(self):
-        if not self.service:
+        if not hasattr(self._local, "service") or self._local.service is None:
             google.authenticate(self.SCOPES)
-            self.service = google.build("gmail", "v1")
-        return self.service
+            self._local.service = google.build("gmail", "v1")
+        return self._local.service
 
     def send_email(
         self,
@@ -76,7 +77,12 @@ class Gmail:
         return base64.urlsafe_b64encode(message.as_bytes()).decode("ascii")
 
     def _get_emails(self, message_dict: Dict[str, Dict]) -> List[EmailSchema]:
-        return [self._get_email_details(msg_id) for msg_id in message_dict.keys()]
+        emails = []
+        for msg_id in message_dict.keys():
+            detail = self._get_email_details(msg_id)
+            if detail is not None:
+                emails.append(detail)
+        return emails
 
     def receive_emails(self, limit: int) -> List[EmailSchema]:
         service = self._get_service()

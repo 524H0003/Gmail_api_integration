@@ -2,15 +2,22 @@ from base64 import b64decode
 from json import JSONDecodeError, loads
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
 from backend.app.schemas.Google import PubSubEnvelope
 from backend.app.utils.Gmail import gmail
-from backend.app.db.session import get_db_session
-from sqlalchemy.orm import Session
+from backend.app.db.session import get_db_session, SessionFactory
 from backend.app.repositories.GmailHistoryRepo import GmailHistoryRepo
 from backend.app.repositories.AbsentRequestRepo import AbsentRequestRepo
+from backend.app.schemas.Email import EmailSchema
 
 router = APIRouter(prefix="/webhooks")
+
+
+def process_emails_background(emails: list[EmailSchema]):
+    with SessionFactory() as session:
+        repo = AbsentRequestRepo(session)
+        repo.processing_emails(emails)
 
 
 @router.post("/gmail", status_code=status.HTTP_204_NO_CONTENT)
@@ -25,12 +32,9 @@ async def gmail_webhook(
 
         history_id_db = GmailHistoryRepo(db_session)
         emails = gmail.receive_emails_by_history_id(history_id_db.get())
-        if not len(emails) == 0:
+        if emails:
             history_id_db.create(history_id)
-
-        absentRequestRepo = AbsentRequestRepo(db_session)
-
-        background_tasks.add_task(absentRequestRepo.processing_emails, emails)
+            background_tasks.add_task(process_emails_background, emails)
 
     except (KeyError, ValueError, JSONDecodeError) as error:
         raise HTTPException(

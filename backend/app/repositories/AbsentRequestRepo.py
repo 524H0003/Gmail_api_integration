@@ -133,29 +133,43 @@ class AbsentRequestRepo:
     def processing_emails(self, emails: list[EmailSchema]):
         for email in emails:
             try:
-                if not email.from_email == settings.manager_email:
+                if not email:
                     continue
 
-                request = self.get_absent_request_by_id(email.subject)
+                if settings.manager_email not in email.from_email:
+                    continue
 
+                subject = email.subject
+
+                try:
+                    uuid.UUID(subject)
+                except ValueError:
+                    continue
+
+                request = self.get_absent_request_by_id(subject)
                 if not request:
-                    raise LookupError(f"Request not found: {email.subject}")
+                    continue
 
                 gmail.mark_as_read(email.message_id)
 
                 body = email.body.strip()
-                [status, security_code] = body.split(" ")
+                parts = body.split()
+                if len(parts) < 2:
+                    continue
 
-                if not security_code == request.security_code:
-                    raise ValueError(f"Invalid security code: {email.subject}")
+                status, security_code = parts[0], parts[1]
 
-                if not request.status == AbsentStatus.PENDING:
-                    raise ValueError("Invalid request")
+                if security_code != request.security_code:
+                    print(f"Invalid security code: {subject}")
+                    continue
+
+                if request.status != AbsentStatus.PENDING:
+                    continue
 
                 self.update_absent_request_status(request.id, status, email.message_id)
 
             except Exception as e:
-                print(e)
+                print(f"Error processing email: {e}")
                 continue
 
     def update_absent_request_status(
