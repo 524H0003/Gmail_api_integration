@@ -15,7 +15,7 @@ winget install ngrok.ngrok; winget install pnpm.pnpm; winget install Python.Pyth
 
 Nhập Y để chấp nhận
 
-Tạo một terminal mới và cập nhật ngrok
+Tạo một terminal mới với quyền Admin và cập nhật ngrok
 
 ```ps
 ngrok update
