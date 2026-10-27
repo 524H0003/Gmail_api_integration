@@ -111,7 +111,7 @@ Nhập `yes` để xác nhận
 ## Lấy credentials.json
 
 - Đầu tiên, cấu hình OAuth consent screen tại [Google Auth Platform](https://console.cloud.google.com/auth/overview) và chọn **External**.
-- Tiếp theo, vào trang [web](https://console.cloud.google.com/apis/credentials). Chọn **Create Credentials** -> **OAuth client ID** -> **Desktop app**. Tải file json và đặt vào thư mục với tên `credentials.json`
+- Tiếp theo, vào trang [web](https://console.cloud.google.com/apis/credentials). Chọn **Create Credentials** -> **OAuth client ID** -> **Desktop app**. Tải file json và đặt vào thư mục **root** với tên `credentials.json`
 - Cuối cùng, thêm email vào test user tại [đây](https://console.cloud.google.com/auth/audience)
 
 # Scripts
