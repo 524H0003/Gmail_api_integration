@@ -136,7 +136,10 @@ class AbsentRequestRepo:
                 if not email:
                     continue
 
-                if settings.manager_email not in email.from_email:
+                if not (
+                    settings.manager_email in email.from_email
+                    or settings.manager_email == email.from_email
+                ):
                     continue
 
                 subject = email.subject

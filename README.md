@@ -11,10 +11,15 @@
 
 ```ps
 winget install ngrok.ngrok; winget install pnpm.pnpm; winget install Python.Python.3.12
+```
 
+Nhập Y để chấp nhận
+
+Tạo một terminal mới và cập nhật ngrok
+
+```ps
 ngrok update
 ```
-Nhập Y để chấp nhận
 
 ## Tạo project
 
