@@ -10,3 +10,4 @@ SQLAlchemy==2.1.5
 uvicorn==0.54.0
 pydantic[email]
 argon2_cffi
+tabulate
