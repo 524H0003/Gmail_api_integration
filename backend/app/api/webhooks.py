@@ -14,27 +14,27 @@ from backend.app.schemas.Email import EmailSchema
 router = APIRouter(prefix="/webhooks")
 
 
-def process_emails_background(emails: list[EmailSchema]):
+def process_emails_background(history_id: str):
     with SessionFactory() as session:
-        repo = AbsentRequestRepo(session)
-        repo.processing_emails(emails)
+        history_id_db = GmailHistoryRepo(session)
+        emails = gmail.receive_emails_by_history_id(history_id_db.get())
+        if emails:
+            history_id_db.create(history_id)
+
+            repo = AbsentRequestRepo(session)
+            repo.processing_emails(emails)
 
 
 @router.post("/gmail", status_code=status.HTTP_204_NO_CONTENT)
 async def gmail_webhook(
     envelope: PubSubEnvelope,
     background_tasks: BackgroundTasks,
-    db_session: Session = Depends(get_db_session),
 ):
     try:
         notification = loads(b64decode(envelope.message.data))
         history_id = notification["historyId"]
 
-        history_id_db = GmailHistoryRepo(db_session)
-        emails = gmail.receive_emails_by_history_id(history_id_db.get())
-        if emails:
-            history_id_db.create(history_id)
-            background_tasks.add_task(process_emails_background, emails)
+        background_tasks.add_task(process_emails_background, history_id)
 
     except (KeyError, ValueError, JSONDecodeError) as error:
         raise HTTPException(
